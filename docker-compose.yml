@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  vector-db-api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - COHERE_API_KEY=${COHERE_API_KEY:-your_key_here}
+      - COHERE_EMBED_URL=${COHERE_EMBED_URL:-https://api.cohere.ai/v1/embed}
+      - COHERE_MODEL=${COHERE_MODEL:-embed-english-v3.0}
+      - API_HOST=${API_HOST:-0.0.0.0}
+      - API_PORT=${API_PORT:-8000}
+      - DATA_DIR=${DATA_DIR:-db}
+    volumes:
+      - ./${DATA_DIR:-db}:/app/${DATA_DIR:-db}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://${API_HOST:-0.0.0.0}:${API_PORT:-8000}/v1/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s 
