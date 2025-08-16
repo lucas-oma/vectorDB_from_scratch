@@ -55,14 +55,24 @@ async def get_chunk(library_id: str, chunk_id: str, svc: VectorDBService = Depen
 @router.patch("/{library_id}/chunks/{chunk_id}", response_model=ChunkResponse)
 async def update_chunk(library_id: str, chunk_id: str, body: UpdateChunkRequest, svc: VectorDBService = Depends(get_service)):
     try:
+        # First verify the chunk exists
+        ch = await svc.get_chunk(chunk_id)
+        if not ch or ch.library_id != library_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="chunk")
+        
         updates = {}
         if body.text is not None: updates["text"] = body.text
         if body.embedding is not None: updates["embedding"] = body.embedding
         if body.metadata is not None: updates["metadata"] = body.metadata
-        updated = await svc.update_chunk(library_id, chunk_id, **updates)
-        if not updated:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="chunk")
-        return ChunkResponse(**updated.dict())
+        
+        # if no updates, return original chunk
+        if updates:
+            updated = await svc.update_chunk(library_id, chunk_id, **updates)
+            if updated:
+                return ChunkResponse(**updated.dict())
+        
+        # No updates or update returned None (no changes needed)
+        return ChunkResponse(**ch.dict())
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 

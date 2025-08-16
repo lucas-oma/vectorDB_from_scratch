@@ -26,22 +26,27 @@ async def list_libraries(svc: VectorDBService = Depends(get_service)):
 async def get_library(library_id: str, svc: VectorDBService = Depends(get_service)):
     lib = await svc.get_library(library_id)
     if not lib:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="library")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="library not found")
     return LibraryResponse(**lib.dict())
 
 @router.patch("/{library_id}", response_model=LibraryResponse)
 async def update_library(library_id: str, body: UpdateLibraryRequest, svc: VectorDBService = Depends(get_service)):
     lib = await svc.get_library(library_id)
     if not lib:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="library")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="library not found")
     updates = {}
     if body.name is not None: updates["name"] = body.name
     if body.index_type is not None: updates["index_type"] = body.index_type
     if body.metadata is not None: updates["metadata"] = body.metadata
-    updated = await svc.update_library(library_id, updates)
-    if not updated:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="library")
-    return LibraryResponse(**updated.dict())
+    
+    # if no updates, return original library
+    if updates:
+        updated = await svc.update_library(library_id, updates)
+        if updated:
+            return LibraryResponse(**updated.dict())
+    
+    # No updates or update returned None (no changes needed)
+    return LibraryResponse(**lib.dict())
 
 @router.delete("/{library_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_library(library_id: str, svc: VectorDBService = Depends(get_service)):

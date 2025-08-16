@@ -40,14 +40,23 @@ async def get_document(library_id: str, document_id: str, svc: VectorDBService =
 @router.patch("/{library_id}/documents/{document_id}", response_model=DocumentResponse)
 async def update_document(library_id: str, document_id: str, body: UpdateDocumentRequest, svc: VectorDBService = Depends(get_service)):
     try:
+        # First verify the document exists
+        doc = await svc.get_document(document_id)
+        if not doc or doc.library_id != library_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="document")
+        
         updates = {}
         if body.title is not None: updates["title"] = body.title
         if body.metadata is not None: updates["metadata"] = body.metadata
-        # library_id changes are not allowed by the VectorDb service; aka. don't pass it
-        updated = await svc.update_document(document_id, updates)
-        if not updated or updated.library_id != library_id:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="document")
-        return DocumentResponse(**updated.dict())
+        
+        # if no updates, return original document
+        if updates:
+            updated = await svc.update_document(document_id, updates)
+            if updated:
+                return DocumentResponse(**updated.dict())
+        
+        # No updates or update returned None (no changes needed)
+        return DocumentResponse(**doc.dict())
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
