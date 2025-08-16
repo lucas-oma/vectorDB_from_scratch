@@ -1,0 +1,10 @@
+fastapi
+requests
+python-dotenv
+numpy
+pytest
+pytest-asyncio
+motor
+pymongo
+httpx
+pytest-mock 
