@@ -5,9 +5,9 @@ from datetime import datetime
 
 # Request models
 class CreateLibraryRequest(BaseModel):
-    name: str = Field(..., description="Library name")
-    dims: int = Field(..., description="Embedding dimensions")
-    index_type: Optional[str] = Field(default="linear", description="Index type")
+    name: str = Field(..., min_length=1, description="Library name")
+    dims: int = Field(..., gt=0, description="Embedding dimensions")
+    index_type: Optional[str] = Field(default="flat", description="Index type")
     metadata: Optional[Dict[str, str]] = Field(default=None, description="Library metadata")
 
 
