@@ -20,6 +20,10 @@ class VectorIndex(ABC):
             if n > 0.0:
                 arr = arr / n
         return arr
+    
+    def train(self, sample_vectors: Optional[np.ndarray] = None) -> None:
+        """Train the index if needed (e.g. IVF) using sample_vectors if provided"""
+        pass
 
     @abstractmethod
     def add_chunk(self, chunk: Chunk) -> None:

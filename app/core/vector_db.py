@@ -4,7 +4,9 @@ from typing import List, Optional, Dict, Type
 from uuid import uuid4
 from collections import defaultdict
 from contextlib import asynccontextmanager
+import numpy as np
 
+from app.core.indexes.ivf import IVFIndex
 from app.core.models import Library, Document, Chunk, SearchResult
 from app.core.mongo_storage import MongoStorage
 from app.core.indexing import VectorIndex
@@ -78,8 +80,7 @@ class VectorDBService:
 
         self._index_registry: Dict[str, Type[VectorIndex]] = {
             "flat": FlatIndex,
-            # "hnsw": HNSWIndex,
-            # "lsh": LSHIndex,
+            "ivf": IVFIndex,
         }
         if default_index_type not in self._index_registry:
             raise ValueError(f"default_index_type '{default_index_type}' not in registry")
@@ -203,7 +204,8 @@ class VectorDBService:
 
         lock = await self._get_idx_lock(lib_id)
         async with lock.write():
-            self._ensure_index_sync(lib_id, lib.dims, lib.index_type).add_chunk(ch)
+            idx = self._ensure_index_sync(lib_id, lib.dims, lib.index_type)
+            idx.add_chunk(ch)
         return ch
 
     async def get_chunk(self, chunk_id: str) -> Optional[Chunk]:
@@ -229,7 +231,8 @@ class VectorDBService:
             lock = await self._get_idx_lock(lib_id)
             async with lock.write():
                 lib = await self.get_library(lib_id) # use the lib's index type
-                self._ensure_index_sync(lib_id, lib.dims, lib.index_type).update_chunk(chunk_id, updated)
+                idx = self._ensure_index_sync(lib_id, lib.dims, lib.index_type)
+                idx.update_chunk(chunk_id, updated)
         return updated
 
     async def delete_chunk(self, lib_id: str, chunk_id: str) -> bool:
@@ -288,11 +291,44 @@ class VectorDBService:
             async with self._service_lock:
                 self.indexes[lib_id] = new_idx
 
+    async def train_index(self, lib_id: str, sample_vectors: Optional[List[List[float]]] = None) -> None:
+        """
+        Train an index (e.g., IVF). Uses proper locking to ensure thread safety.
+        """
+        lib = await self.get_library(lib_id)
+        if not lib:
+            raise KeyError("library")
+
+        # Validate that the library's index type is supported
+        if lib.index_type.lower() not in self._index_registry:
+            supported_types = list(self._index_registry.keys())
+            raise ValueError(f"Index type '{lib.index_type}' not supported. Supported types: {supported_types}")
+
+        # Get the index with proper locking
+        lock = await self._get_idx_lock(lib_id)
+        async with lock.write():
+            idx = self.indexes.get(lib_id)
+            if not idx:
+                raise ValueError("Index not found")
+
+            # Train the index
+            if sample_vectors:
+                sample_vectors_np = np.array(sample_vectors, dtype=np.float32)
+                idx.train(sample_vectors=sample_vectors_np)
+            else:
+                # Use existing vectors in the index
+                if hasattr(idx, 'chunk_vectors') and idx.chunk_vectors:
+                    sample_vectors_np = np.stack(list(idx.chunk_vectors.values()))
+                    idx.train(sample_vectors=sample_vectors_np)
+                else:
+                    raise ValueError("No vectors available for training")
+
     # ---------------- index helpers ----------------
     async def _ensure_index(self, lib_id: str, dims: int, index_type: Optional[str]) -> VectorIndex:
         """
         Ensure an index exists for a library. Safe for callers without the per-lib lock.
         May acquire the per-lib WRITE lock if the index is missing.
+        Automatically rebuilds index from persisted data if it's missing.
         """
         idx = self.indexes.get(lib_id)
         if idx is not None:
@@ -303,8 +339,15 @@ class VectorDBService:
         async with lock.write():
             idx = self.indexes.get(lib_id)
             if idx is None:
+                # Create new index
                 idx_cls = self._resolve_index_cls(index_type or self._lib_index_type.get(lib_id))
                 idx = idx_cls(dimension=dims)
+                
+                # Populate index with existing chunks from MongoDB
+                chunks = await self.storage.load_chunks_for_library(lib_id) or []
+                for chunk in chunks:
+                    idx.add_chunk(chunk)
+                
                 self.indexes[lib_id] = idx
                 if index_type:
                     async with self._service_lock:

@@ -10,7 +10,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 from app.core.mongo_storage import MongoStorage
 from app.core.vector_db import VectorDBService
-from app.api.routes import libraries, documents, chunks, search, embed
+from app.api.routes import libraries, documents, chunks, operations, embed
 
 API_TITLE = "Vector Database API"
 API_VERSION = os.getenv("API_VERSION", "0.1.0")
@@ -73,9 +73,9 @@ def create_app() -> FastAPI:
     # sub-routers under /v1
     api.include_router(libraries.router, prefix="/libraries", tags=["Libraries"])
     api.include_router(documents.router, prefix="/libraries", tags=["Documents"])
-    api.include_router(chunks.router,    prefix="/libraries", tags=["Chunks"])
-    api.include_router(search.router,    prefix="/libraries", tags=["Search"])
-    api.include_router(embed.router,     prefix="",           tags=["Embeddings"])
+    api.include_router(chunks.router, prefix="/libraries", tags=["Chunks"])
+    api.include_router(operations.router, prefix="/libraries", tags=["Operations"])
+    api.include_router(embed.router, prefix="", tags=["Embeddings"])
 
     app.include_router(api)
 

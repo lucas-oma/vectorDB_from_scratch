@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.api.deps import get_service
 from app.core.vector_db import VectorDBService
 from app.api.dto import (
-    RebuildIndexRequest, SearchRequest,
+    RebuildIndexRequest, TrainIndexRequest, SearchRequest,
     SearchResponse, LibraryStatsResponse, ChunkResponse
 )
 
@@ -21,6 +21,26 @@ async def rebuild_index(library_id: str, body: RebuildIndexRequest, svc: VectorD
         return {"message": f"Index rebuilt for library '{library_id}'", "index_type": lib.index_type, "dims": lib.dims}
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.post("/{library_id}/index/train", status_code=status.HTTP_202_ACCEPTED)
+async def train_index(library_id: str, body: TrainIndexRequest, svc: VectorDBService = Depends(get_service)):
+    """Train an index. Only works for indexes that require training (example: IVF)."""
+    try:
+        # Use the service method with proper locking
+        await svc.train_index(library_id, sample_vectors=body.sample_vectors)
+        
+        lib = await svc.get_library(library_id)
+        return {
+            "message": f"Index trained for library '{library_id}'", 
+            "index_type": lib.index_type, 
+            "dims": lib.dims,
+        }
+    except KeyError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="library")
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @router.get("/{library_id}/stats", response_model=LibraryStatsResponse)
 async def get_library_stats(library_id: str, svc: VectorDBService = Depends(get_service)):

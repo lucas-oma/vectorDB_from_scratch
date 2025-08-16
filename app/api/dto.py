@@ -49,6 +49,11 @@ class RebuildIndexRequest(BaseModel):
     params: Optional[Dict[str, Any]] = Field(default=None, description="Index parameters")
 
 
+class TrainIndexRequest(BaseModel):
+    sample_vectors: Optional[List[List[float]]] = Field(default=None, description="Sample vectors for training")
+    params: Optional[Dict[str, Any]] = Field(default=None, description="Training parameters")
+
+
 class SearchRequest(BaseModel):
     embedding: List[float] = Field(..., description="Query embedding vector")
     k: int = Field(default=10, ge=1, le=100, description="Number of results")
