@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import os
 import logging
 from contextlib import asynccontextmanager
@@ -7,7 +8,7 @@ from fastapi import FastAPI, status, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-from app.core.storage import DiskStorage
+from app.core.mongo_storage import MongoStorage
 from app.core.vector_db import VectorDBService
 from app.api.routes import libraries, documents, chunks, search, embed
 
@@ -18,7 +19,8 @@ API_REDOC = os.getenv("API_REDOC", "/redoc")
 API_OPENAPI = os.getenv("API_OPENAPI", "/openapi.json")
 CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
 ROOT_PATH = os.getenv("ROOT_PATH", "")
-DATA_DIR = os.getenv("DATA_DIR", "db")  # where DiskStorage persists objects
+MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
+MONGODB_DB = os.getenv("MONGODB_DB", "vector_db")
 
 log = logging.getLogger("uvicorn.error")
 
@@ -27,15 +29,12 @@ log = logging.getLogger("uvicorn.error")
 async def lifespan(app: FastAPI):
     """Startup/shutdown: initialize storage and service once."""
     log.info("Starting Vector Database API...")
-
-    storage = DiskStorage(DATA_DIR) # persistent storage
     
-    # Orchestrator: talks to storage and manages in-RAM indexes
-    service = VectorDBService(storage)
+    storage = MongoStorage(MONGODB_URI, MONGODB_DB) # persistent storage
+    await storage._create_indexes()
+    
+    service = VectorDBService(storage) # Orchestrator: talks to storage and manages in-RAM indexes
 
-    # TODO: load snapshots from disk on boot for fast init [work in progress]
-    # for lib in service.list_libraries():
-    #     service.rebuild_index(lib.id)
 
     app.state.storage = storage
     app.state.service = service
@@ -44,6 +43,7 @@ async def lifespan(app: FastAPI):
         yield
     finally:
         log.info("Shutting down Vector Database API...")
+        await storage.close()
 
 
 def create_app() -> FastAPI:
@@ -94,7 +94,7 @@ def create_app() -> FastAPI:
         svc = getattr(request.app.state, "service", None)
         if not svc:
             return {"error": "service not initialized"}
-        return {"message": "OK", "data_dir": getattr(svc.storage, "data_dir", DATA_DIR)}
+        return {"message": "OK", "mongodb_uri": MONGODB_URI, "mongodb_db": MONGODB_DB}
 
     # Root
     @app.get("/", status_code=status.HTTP_200_OK)
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         "app.main:app",
         host=os.getenv("API_HOST", "0.0.0.0"),
         port=int(os.getenv("API_PORT", "8000")),
-        reload=os.getenv("API_RELOAD", "true").lower() == "true",
-        log_level=os.getenv("API_LOG_LEVEL", "info"),
+        reload="true",
+        log_level="info",
         factory=False,
     )
