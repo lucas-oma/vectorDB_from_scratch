@@ -4,10 +4,8 @@ from typing import List, Dict
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file (in current directory)
 load_dotenv("../.env")
 
-# Cohere API configuration from environment variables
 COHERE_API_KEY = os.getenv("COHERE_API_KEY", "your_key_here")
 COHERE_EMBED_URL = os.getenv("COHERE_EMBED_URL", "https://api.cohere.ai/v1/embed")
 
@@ -38,7 +36,7 @@ def generate_embedding(text: str) -> List[float]:
 def generate_test_chunks(library_id: str, document_id: str, num_chunks: int = 5) -> List[Dict]:
     """Generate test chunks with real embeddings."""
     
-    # Sample texts for testing - MongoDB-focused content
+    # Sample texts for testing
     sample_texts = [
         "MongoDB is a NoSQL database that stores data in flexible, JSON-like documents.",
         "Vector databases enable efficient similarity search for high-dimensional data like embeddings.",
@@ -58,7 +56,6 @@ def generate_test_chunks(library_id: str, document_id: str, num_chunks: int = 5)
         # Select a random text or use all if num_chunks > len(sample_texts)
         text = sample_texts[i % len(sample_texts)]
         
-        # Generate embedding
         embedding = generate_embedding(text)
         
         chunk = {

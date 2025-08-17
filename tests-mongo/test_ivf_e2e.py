@@ -64,7 +64,7 @@ class TestIVFE2E:
     @pytest.mark.asyncio
     async def test_ivf_basic_workflow(self, client):
         """Test basic IVF workflow: create library -> add data -> train -> search."""
-        # Create library with IVF index
+
         create_data = {
             "name": "IVF Test Library",
             "dims": 1024,
@@ -80,7 +80,6 @@ class TestIVFE2E:
         
         assert library_data["index_type"] == "ivf"
         
-                # Add some chunks to the library (these will be stored but not indexed yet)
         document_data = {"title": "Test Document", "metadata": {}}
         resp = await client.post(_url(f"/libraries/{library_id}/documents"), json=document_data)
         _assert_status(resp, 201, "create document")
@@ -89,7 +88,6 @@ class TestIVFE2E:
         # Generate training chunks with real embeddings
         training_chunks = generate_test_chunks(library_id, document_id, num_chunks=5)
         
-        # Add training chunks to the library
         for i, chunk in enumerate(training_chunks):
             chunk_data = {
                 "document_id": document_id,

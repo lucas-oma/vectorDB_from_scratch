@@ -8,7 +8,6 @@ import pytest_asyncio
 import httpx
 from data_generator import generate_test_data
 
-# Test configuration
 # Load environment variables from root .env file
 try:
     from dotenv import load_dotenv

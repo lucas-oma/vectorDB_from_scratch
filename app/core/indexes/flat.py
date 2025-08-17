@@ -72,13 +72,4 @@ class FlatIndex(VectorIndex):
     def get_complexity(self) -> tuple[str, str]:
         return ("O(N*d)", "Build: O(1) | Query: O(N*d) + O(N log k)")
 
-    # TODO: optional snapshot hooks for fast index loading from disk
-    # def export_snapshot(self) -> Tuple[List[str], np.ndarray]:
-    #     ids = list(self._vecs.keys())
-    #     mat = np.vstack([self._vecs[i] for i in ids]) if ids else np.empty((0, self.dimension), dtype=np.float32)
-    #     return ids, mat
 
-    # def import_snapshot(self, ids: List[str], mat: np.ndarray) -> None:
-    #     self._vecs.clear()
-    #     for i, cid in enumerate(ids):
-    #         self._vecs[cid] = np.asarray(mat[i], dtype=np.float32)

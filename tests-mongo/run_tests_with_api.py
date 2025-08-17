@@ -53,7 +53,7 @@ def stop_test_api():
     """Stop the test API service."""
     print("🛑 Stopping test API service...")
     try:
-        cmd = ["docker-compose", "-f", "docker-compose.test.yml", "down"]
+        cmd = ["docker-compose", "-f", "docker-compose.test.yml", "down", "--remove-orphans"]
         result = subprocess.run(cmd, cwd=Path(__file__).parent.parent)
         
         if result.returncode == 0:
