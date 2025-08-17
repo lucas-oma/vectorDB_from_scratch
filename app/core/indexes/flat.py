@@ -67,7 +67,7 @@ class FlatIndex(VectorIndex):
                 heapq.heapreplace(heap, (score, cid, raw))
 
         heap.sort(key=lambda x: x[0], reverse=True)
-        return [SearchResult(chunk_id=cid, similarity_score=raw, chunk=None) for _, cid, raw in heap]
+        return [SearchResult(chunk_id=cid, similarity_score=raw) for _, cid, raw in heap]
 
     def get_complexity(self) -> tuple[str, str]:
         return ("O(N*d)", "Build: O(1) | Query: O(N*d) + O(N log k)")
