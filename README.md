@@ -7,6 +7,12 @@
   </div>
 </div>
 
+## Video demo and guide
+
+- Installation and interaction/example: please refer to [this video]()
+
+- Architecture overview: please refer to [this video]()
+
 ## Project Overview
 
 This project implements a complete Vector Database system from scratch. The system supports multiple indexing algorithms, offers a RESTful API, and includes testing and documentation.
@@ -23,10 +29,24 @@ This project implements a complete Vector Database system from scratch. The syst
 - **Embedding Generation**: Integration with Cohere API for text embeddings via custom API call
 
 ## Architecture
-<!-- TODO: add diagram -->
-```
-Client Layer → API Layer (FastAPI) → Service Layer → Storage Layer → Index Layer → Data Layer
-```
+
+For a detailed explanation please refer to [this video]()
+
+The Vector Database follows a layered architecture designed for scalability, maintainability, and production readiness:
+
+<img src="assets/arch.png" alt="Architecture Diagram" height="400">
+
+### Layered Design
+- **API Layer (FastAPI)**: RESTful endpoints with automatic validation and documentation
+- **Service Layer**: Business logic orchestration and vector operations management  
+- **Storage Layer (MongoDB)**: Persistent data storage with automatic index rebuilding
+- **Index Layer**: Multiple vector indexing algorithms (Flat, IVF, LSH SimHash)
+
+### Key Features
+- **Async-first**: Built with Python asyncio for high concurrency
+- **Thread-safe**: Custom AsyncRWLock for concurrent index access
+- **Production-ready**: Automatic index rebuilding from persistent data
+- **Flexible**: Support for multiple indexing algorithms based on use case
 
 
 ## Quick Start
