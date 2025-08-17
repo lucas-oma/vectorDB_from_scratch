@@ -9,9 +9,9 @@
 
 ## Video demo and guide
 
-- Installation and interaction/example: please refer to [this video]()
+- Installation and interaction/example: please refer to [this video](https://drive.google.com/file/d/1kYTj4GoaGGX0UrbVnHEZyTIOvR-kIWlb/view?usp=drive_link)
 
-- Architecture overview: please refer to [this video]()
+- Architecture overview: please refer to [this video](https://drive.google.com/file/d/1MbfkMABJ-bjZB0RHYHv-kjwJalvdJqdK/view?usp=drive_link)
 
 ## Project Overview
 
@@ -30,7 +30,7 @@ This project implements a complete Vector Database system from scratch. The syst
 
 ## Architecture
 
-For a detailed explanation please refer to [this video]()
+For a slightly more detailed explanation please refer to [this video](https://drive.google.com/file/d/1MbfkMABJ-bjZB0RHYHv-kjwJalvdJqdK/view?usp=drive_link)
 
 The Vector Database follows a layered architecture designed for scalability, maintainability, and production readiness:
 
@@ -127,7 +127,9 @@ The Vector Database follows a layered architecture designed for scalability, mai
 - `GET /v1/libraries/{library_id}/stats` - Get library statistics
 - `POST /v1/embed` - Generate embeddings from text
 
-### Example Usage
+### Some Example Usage
+
+> Check postman guide (last par of [this video](https://drive.google.com/file/d/1kYTj4GoaGGX0UrbVnHEZyTIOvR-kIWlb/view?usp=drive_link)) for more examples. Or read the doc at http://localhost:8000/docs
 
 #### Creating a Library with Flat Index
 ```bash
