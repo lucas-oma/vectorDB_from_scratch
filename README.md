@@ -244,7 +244,6 @@ The project includes a data generator (`tests-mongo/data_generator.py`) that cre
 
 ### Running Tests
 
-<!-- TODO: create env!!! for testing and you must have serrvices up -->
 #### E2E Tests (uses mongo for persistence)
 ```bash
 cd tests-mongo

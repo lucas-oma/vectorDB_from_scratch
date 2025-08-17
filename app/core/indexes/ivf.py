@@ -122,12 +122,6 @@ class IVFIndex(VectorIndex):
         return [SearchResult(chunk_id=cand_ids[i], similarity_score=float(scores[i]))
                 for i in top_sorted]
 
-    # TODO: double check complexities
-    def get_complexity(self) -> tuple[str, str]:
-        return ("Space: O(n) + O(k*d)",
-                "Build: O(n*k*iters) k-means + O(n) assign | Query: O(n_probes*avg_list*d) + O(m + k log k)")
-
-
     def train(self, sample_vectors: Optional[np.ndarray] = None) -> None:
         """
         Compute centroids. If sample_vectors is None, use current vectors (incl. pending).
