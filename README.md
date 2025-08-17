@@ -9,9 +9,9 @@
 
 ## Video demo and guide
 
-- Installation and interaction/example: please refer to [this video]()
+- Installation and interaction/example: please refer to [this video](https://drive.google.com/file/d/1kYTj4GoaGGX0UrbVnHEZyTIOvR-kIWlb/view?usp=drive_link)
 
-- Architecture overview: please refer to [this video]()
+- Architecture overview: please refer to [this video](https://drive.google.com/file/d/1MbfkMABJ-bjZB0RHYHv-kjwJalvdJqdK/view?usp=drive_link)
 
 ## Project Overview
 
@@ -30,7 +30,7 @@ This project implements a complete Vector Database system from scratch. The syst
 
 ## Architecture
 
-For a detailed explanation please refer to [this video]()
+For a slightly more detailed explanation please refer to [this video](https://drive.google.com/file/d/1MbfkMABJ-bjZB0RHYHv-kjwJalvdJqdK/view?usp=drive_link)
 
 The Vector Database follows a layered architecture designed for scalability, maintainability, and production readiness:
 
@@ -127,7 +127,9 @@ The Vector Database follows a layered architecture designed for scalability, mai
 - `GET /v1/libraries/{library_id}/stats` - Get library statistics
 - `POST /v1/embed` - Generate embeddings from text
 
-### Example Usage
+### Some Example Usage
+
+> Check postman guide (last par of [this video](https://drive.google.com/file/d/1kYTj4GoaGGX0UrbVnHEZyTIOvR-kIWlb/view?usp=drive_link)) for more examples. Or read the doc at http://localhost:8000/docs
 
 #### Creating a Library with Flat Index
 ```bash
@@ -207,32 +209,37 @@ curl -X POST "http://localhost:8000/v1/libraries/{library_id}/search_text" \
 
 ### 1. Flat Index
 - **Type**: Exact search
-- **Space Complexity**: O(n*d) where d is the embedding dimension
-- **Query Complexity**: O(n*d) where d is the embedding dimension
+- **Space Complexity**: O(n×d)
+- **Query Complexity**: O(n×d)
+- **Build Complexity**: O(1) unless normalization required
 - **Use Case**: Small datasets, exact similarity search
 - **Implementation**: Linear scan through all vectors, return top k most similars
 
 ### 2. IVF (Inverted File) Index
 - **Type**: Approximate search
-- **Space Complexity**: O(n_clusters*d + n*d)
-- **Query Complexity**: O(n_clusters*d + C*d)
+- **Space Complexity**: O((n_clusters+n)×d)
+- **Query Complexity**: O((n_clusters+C)×d)
+- **Build Complexity**: O(n_clusters×n×d)
 - **Use Case**: Large datasets, approximate search
 - **Implementation**: K-means clustering with inverted lists
 
 ### 3. LSH SimHash Index
 - **Type**: Approximate search
-- **Space Complexity**: O(n_tables*n + n_bits*d)
-- **Query Complexity**: O(n_tables*n_bits*d + C*d)
+- **Space Complexity**: O(n_tables×n + n_bits×d)
+- **Query Complexity**: O(n_tables×n_bits×d + C×d)
+- **Build Complexity**: O(n_tables×n_bits×n×d)
 - **Use Case**: High-dimensional vectors, approximate search
 - **Implementation**: Random hyperplanes with hash tables
 
+**Note**: where C is average number of vectors per bucket or cluster → C << n
+
 ### Algorithm Selection Guide
 
-| Dataset Size | Dimensions | Accuracy Requirement | Recommended Index |
-|--------------|------------|---------------------|-------------------|
-| Small (< 10K) | Any | Exact | Flat |
-| Large (> 100K) | Medium | Approximate | IVF |
-| Any | High (> 1000) | Approximate | LSH SimHash |
+| Scenario | Why | Pick |
+|----------|-----|------|
+| Exact results, or N small (≤ ~100k) | Flat scan is simple and often fast enough in small datasets | Flat |
+| N large (≥ ~100k-10M), can train, mostly static | Probes a few lists or buckets instead of full comparisons | IVF |
+| N large / no training allowed / very fast upserts, tolerate lower recall | Hashes to buckets with random hyperplanes; then re-ranks candidates | LSH (SimHash) |
 
 ## 🧪 Testing
 
@@ -242,7 +249,6 @@ The project includes a data generator (`tests-mongo/data_generator.py`) that cre
 
 ### Running Tests
 
-<!-- TODO: create env!!! for testing and you must have serrvices up -->
 #### E2E Tests (uses mongo for persistence)
 ```bash
 cd tests-mongo
@@ -284,11 +290,6 @@ python -m pytest test_persistence.py -v
 - **Test Mode**: API runs with `TEST_MODE=true` environment variable
 - **Automatic Cleanup**: Test data is automatically cleaned after each test
 
-<!-- #### Performance Tests
-```bash
-# Run performance comparison
-python -m pytest test_lsh_simhash_e2e.py::TestLSHSimHashE2E::test_lsh_simhash_performance_comparison -v -s
-``` -->
 
 
 ## ⚙️ Technical Design Choices

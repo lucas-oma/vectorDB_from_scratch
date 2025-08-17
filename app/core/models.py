@@ -14,16 +14,14 @@ class Chunk(BaseModel):
     text: str = Field(..., min_length=1, description="The text content of the chunk")
     embedding: List[float] = Field(..., min_items=1, description="Vector embedding of the chunk")
     metadata: Dict[str, str] = Field(default_factory=dict, description="Additional metadata")
-    # created_at: datetime = Field(default_factory=datetime.utcnow) # TODO: check if needed or if just metadata is enough
-    # updated_at: datetime = Field(default_factory=datetime.utcnow) # TODO: check if needed or if just metadata is enough
+    
 
 class Document(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Unique identifier for the document")
     library_id: str = Field(..., description="ID of the parent library")
     title: str = Field(..., min_length=1, description="Title of the document")
     metadata: Dict[str, str] = Field(default_factory=dict, description="Document-level metadata")
-    # created_at: datetime = Field(default_factory=datetime.utcnow) # TODO: check if needed or if just metadata is enough
-    # updated_at: datetime = Field(default_factory=datetime.utcnow) # TODO: check if needed or if just metadata is enough
+    
 
 class Library(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Unique identifier for the library")
@@ -31,8 +29,7 @@ class Library(BaseModel):
     dims: int = Field(..., gt=0, description="Embedding dimensionality for this library's content")
     index_type: str = Field(default="linear", description="Indexing algorithm: linear, kdtree, or lsh")  # "linear" | "kdtree" | "lsh"
     metadata: Dict[str, str] = Field(default_factory=dict, description="Library-level metadata")
-    # created_at: datetime = Field(default_factory=datetime.utcnow) # TODO: check if needed or if just metadata is enough
-    # updated_at: datetime = Field(default_factory=datetime.utcnow) # TODO: check if needed or if just metadata is enough
+    
 
 
 

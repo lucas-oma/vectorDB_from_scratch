@@ -129,7 +129,3 @@ class SimHashLSHIndex(VectorIndex):
         return [SearchResult(chunk_id=ids[i], similarity_score=float(scores[i]))
                 for i in top_sorted]
 
-    def get_complexity(self) -> tuple[str, str]:
-        return ("Space: O(n_tables*n) + O(n_tables*n_bits*d)",
-                "Build: O(n_tables*n_bits*n*d) | Query: O(n_tables*n_bits*d) + O(C*d) + top-k")
-

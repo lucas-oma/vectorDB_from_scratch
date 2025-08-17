@@ -45,8 +45,3 @@ class VectorIndex(ABC):
                metadata_filters: Optional[Dict[str, str]] = None) -> List[SearchResult]:
         """Search for similar chunks."""
         pass
-    
-    @abstractmethod
-    def get_complexity(self) -> tuple[str, str]:
-        """Return (space_complexity, time_complexity) as strings."""
-        pass
