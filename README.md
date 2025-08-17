@@ -209,32 +209,37 @@ curl -X POST "http://localhost:8000/v1/libraries/{library_id}/search_text" \
 
 ### 1. Flat Index
 - **Type**: Exact search
-- **Space Complexity**: O(n*d) where d is the embedding dimension
-- **Query Complexity**: O(n*d) where d is the embedding dimension
+- **Space Complexity**: O(n×d)
+- **Query Complexity**: O(n×d)
+- **Build Complexity**: O(1) unless normalization required
 - **Use Case**: Small datasets, exact similarity search
 - **Implementation**: Linear scan through all vectors, return top k most similars
 
 ### 2. IVF (Inverted File) Index
 - **Type**: Approximate search
-- **Space Complexity**: O(n_clusters*d + n*d)
-- **Query Complexity**: O(n_clusters*d + C*d)
+- **Space Complexity**: O((n_clusters+n)×d)
+- **Query Complexity**: O((n_clusters+C)×d)
+- **Build Complexity**: O(n_clusters×n×d)
 - **Use Case**: Large datasets, approximate search
 - **Implementation**: K-means clustering with inverted lists
 
 ### 3. LSH SimHash Index
 - **Type**: Approximate search
-- **Space Complexity**: O(n_tables*n + n_bits*d)
-- **Query Complexity**: O(n_tables*n_bits*d + C*d)
+- **Space Complexity**: O(n_tables×n + n_bits×d)
+- **Query Complexity**: O(n_tables×n_bits×d + C×d)
+- **Build Complexity**: O(n_tables×n_bits×n×d)
 - **Use Case**: High-dimensional vectors, approximate search
 - **Implementation**: Random hyperplanes with hash tables
 
+**Note**: where C is average number of vectors per bucket or cluster → C << n
+
 ### Algorithm Selection Guide
 
-| Dataset Size | Dimensions | Accuracy Requirement | Recommended Index |
-|--------------|------------|---------------------|-------------------|
-| Small (< 10K) | Any | Exact | Flat |
-| Large (> 100K) | Medium | Approximate | IVF |
-| Any | High (> 1000) | Approximate | LSH SimHash |
+| Scenario | Why | Pick |
+|----------|-----|------|
+| Exact results, or N small (≤ ~100k) | Flat scan is simple and often fast enough in small datasets | Flat |
+| N large (≥ ~100k-10M), can train, mostly static | Probes a few lists or buckets instead of full comparisons | IVF |
+| N large / no training allowed / very fast upserts, tolerate lower recall | Hashes to buckets with random hyperplanes; then re-ranks candidates | LSH (SimHash) |
 
 ## 🧪 Testing
 
