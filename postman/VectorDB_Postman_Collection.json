@@ -138,6 +138,32 @@
 					}
 				},
 				{
+					"name": "Update Library",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Library Name\",\n  \"index_type\": \"ivf\",\n  \"metadata\": {\n    \"description\": \"Updated library description\",\n    \"updated_by\": \"postman\",\n    \"updated_at\": \"2024-01-15T10:30:00Z\",\n    \"version\": \"2.0\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}"
+							]
+						}
+					}
+				},
+				{
 					"name": "Delete Library",
 					"request": {
 						"method": "DELETE",
@@ -209,6 +235,34 @@
 					"request": {
 						"method": "GET",
 						"header": [],
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/documents/{{document_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"documents",
+								"{{document_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Document",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Document Title\",\n  \"metadata\": {\n    \"author\": \"John Doe\",\n    \"category\": \"technical\",\n    \"updated_by\": \"postman\",\n    \"updated_at\": \"2024-01-15T10:30:00Z\"\n  }\n}"
+						},
 						"url": {
 							"raw": "{{base_url}}/libraries/{{library_id}}/documents/{{document_id}}",
 							"host": [
