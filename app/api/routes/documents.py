@@ -18,6 +18,8 @@ async def create_document(library_id: str, body: CreateDocumentRequest, svc: Vec
         return DocumentResponse(**doc.dict())
     except KeyError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="library")
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 @router.get("/{library_id}/documents", response_model=List[DocumentResponse])
 async def list_documents(library_id: str, svc: VectorDBService = Depends(get_service)):
@@ -51,9 +53,12 @@ async def update_document(library_id: str, document_id: str, body: UpdateDocumen
         
         # if no updates, return original document
         if updates:
-            updated = await svc.update_document(document_id, updates)
-            if updated:
-                return DocumentResponse(**updated.dict())
+            try:
+                updated = await svc.update_document(document_id, updates)
+                if updated:
+                    return DocumentResponse(**updated.dict())
+            except ValueError as e:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
         
         # No updates or update returned None (no changes needed)
         return DocumentResponse(**doc.dict())

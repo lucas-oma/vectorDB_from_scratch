@@ -13,8 +13,11 @@ router = APIRouter()
 
 @router.post("/", response_model=LibraryResponse, status_code=status.HTTP_201_CREATED)
 async def create_library(body: CreateLibraryRequest, svc: VectorDBService = Depends(get_service)):
-    lib = await svc.create_library(body.name, body.dims, body.index_type or "flat", body.metadata)
-    return LibraryResponse(**lib.dict())
+    try:
+        lib = await svc.create_library(body.name, body.dims, body.index_type or "flat", body.metadata)
+        return LibraryResponse(**lib.dict())
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 @router.get("/", response_model=List[LibraryResponse])
 async def list_libraries(svc: VectorDBService = Depends(get_service)):
@@ -41,9 +44,12 @@ async def update_library(library_id: str, body: UpdateLibraryRequest, svc: Vecto
     
     # if no updates, return original library
     if updates:
-        updated = await svc.update_library(library_id, updates)
-        if updated:
-            return LibraryResponse(**updated.dict())
+        try:
+            updated = await svc.update_library(library_id, updates)
+            if updated:
+                return LibraryResponse(**updated.dict())
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     
     # No updates or update returned None (no changes needed)
     return LibraryResponse(**lib.dict())

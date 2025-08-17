@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables from .env file (in current directory)
-load_dotenv()
+load_dotenv("../.env")
 
 # Cohere API configuration from environment variables
 COHERE_API_KEY = os.getenv("COHERE_API_KEY", "your_key_here")

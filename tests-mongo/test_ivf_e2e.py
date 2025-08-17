@@ -11,10 +11,20 @@ import numpy as np
 from typing import List
 from data_generator import generate_test_chunks, generate_embedding
 
-# Test configuration
-BASE_URL = os.getenv("BASE_URL", "http://localhost:8000/v1")
-TEST_MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://admin:password@localhost:27017/vector_db?authSource=admin")
-TEST_MONGODB_DB = os.getenv("MONGODB_DB", "vector_db")
+# Load environment variables from root .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv("../.env")
+except ImportError:
+    pass
+
+# Test configuration - Use test API on port 8001
+BASE_URL = os.getenv("TEST_BASE_URL", "http://localhost:8001/v1")
+# Use credentials from .env file, connect to test database
+user = os.getenv("MONGODB_USER", "admin")
+password = os.getenv("MONGODB_PASS", "password")
+TEST_MONGODB_URI = f"mongodb://{user}:{password}@localhost:27017/test?authSource=admin"
+TEST_MONGODB_DB = "test"
 
 def _url(path: str) -> str:
     return f"{BASE_URL}{path}"

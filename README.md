@@ -180,16 +180,30 @@ curl -X POST "http://localhost:8000/v1/libraries/{library_id}/search" \
 
 ## Testing
 
-The project includes a simple data generator (`tests-mongo/data_generator.py`) that creates test data for vector database operations. This generator produces sample text chunks with corresponding embeddings using the Cohere API.
+The project includes a test suite with **isolated test environments** to ensure tests don't interfere with production data. The test setup uses a dedicated test API service that runs on port 8001 with `TEST_MODE=true`, ensuring all test data goes to the `test` database.
 
-When running tests, this script is automatically executed to generate data and then simulates CRUD operations (Create, Read, Update, Delete) on libraries, documents, and chunks.
+The project includes a data generator (`tests-mongo/data_generator.py`) that creates test data for vector database operations. This generator produces sample text chunks with corresponding embeddings using the Cohere API and simulates CRUD operations (Create, Read, Update, Delete) on libraries, documents, and chunks.
 
 ### Running Tests
 
+<!-- TODO: create env!!! for testing and you must have serrvices up -->
 #### E2E Tests (uses mongo for persistence)
 ```bash
 cd tests-mongo
-python -m pytest -v
+# Create venv if not already
+python -m venv venv
+
+# Activate venv and install test dependencies if not already)
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Run tests
+```bash
+# Automated test runner: runs docker service for the test API
+cd tests-mongo
+source venv/bin/activate
+python run_tests_with_api.py
+
 ```
 
 #### Individual Test Suites
@@ -197,7 +211,7 @@ python -m pytest -v
 # Flat index tests
 python -m pytest test_e2e_mongo.py -v
 
-# IVF index tests
+# IVF index tests  
 python -m pytest test_ivf_e2e.py -v
 
 # LSH SimHash tests
@@ -206,6 +220,13 @@ python -m pytest test_lsh_simhash_e2e.py -v
 # Persistence tests
 python -m pytest test_persistence.py -v
 ```
+
+### Test Environment Isolation
+
+- **Test API**: Runs on port 8001 (separate from production port 8000)
+- **Test Database**: Uses `test` database (separate from production `vector_db`)
+- **Test Mode**: API runs with `TEST_MODE=true` environment variable
+- **Automatic Cleanup**: Test data is automatically cleaned after each test
 
 <!-- #### Performance Tests
 ```bash
@@ -250,13 +271,32 @@ python -m pytest test_lsh_simhash_e2e.py::TestLSHSimHashE2E::test_lsh_simhash_pe
 - Clean, semi-typed declarative schema definition
 
 ### Environment Variables
-```bash
-# Required
-COHERE_API_KEY=your_cohere_api_key
 
-# Optional
-MONGODB_URI=mongodb://admin:password@localhost:27017/vector_db
+#### Production
+```bash
+# API Configuration
+API_HOST=0.0.0.0
+API_PORT=8000
+API_VERSION=0.1.0
+
+# MongoDB Configuration
 MONGODB_DB=vector_db
-LOG_LEVEL=INFO
+MONGODB_USER=admin
+MONGODB_PASS=password
+
+# Cohere API Configuration (Required)
+COHERE_API_KEY=your_cohere_api_key_here
+COHERE_EMBED_URL=https://api.cohere.ai/v1/embed
+COHERE_MODEL=embed-english-v3.0
+
+# Storage Configuration
+DATA_DIR=./db
+```
+
+#### Testing specific
+```bash
+# Test API Configuration
+TEST_BASE_URL=http://localhost:8001/v1  # Test API endpoint
+# Uses "test" db for persistency
 ```
 
