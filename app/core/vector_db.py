@@ -190,7 +190,7 @@ class VectorDBService:
         if not doc or doc.library_id != lib_id:
             raise KeyError("document")
         if len(embedding) != lib.dims:
-            raise ValueError("dim mismatch")
+            raise ValueError(f"dim mismatch: {len(embedding)} != {lib.dims}")
 
         ch = Chunk(
             id=str(uuid4()),
@@ -224,7 +224,7 @@ class VectorDBService:
         if "embedding" in updates:
             lib = await self.get_library(lib_id)
             if not lib or len(updates["embedding"]) != lib.dims:
-                raise ValueError("dim mismatch")
+                raise ValueError(f"dim mismatch: {len(updates['embedding'])} != {lib.dims}")
 
         updated = await self.storage.update_chunk(chunk_id, updates)
         if updated and "embedding" in updates:
@@ -255,7 +255,7 @@ class VectorDBService:
         if not lib:
             raise KeyError("library")
         if len(query) != lib.dims:
-            raise ValueError("dim mismatch")
+            raise ValueError(f"dim mismatch: {len(query)} != {lib.dims}")
 
         idx = await self._ensure_index(lib_id, lib.dims, lib.index_type)
 

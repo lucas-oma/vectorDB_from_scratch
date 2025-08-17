@@ -1,6 +1,5 @@
 from typing import List, Dict, Optional, Any
 from pydantic import BaseModel, Field
-from datetime import datetime
 
 
 # Request models
@@ -30,7 +29,7 @@ class UpdateDocumentRequest(BaseModel):
 class CreateChunkRequest(BaseModel):
     document_id: str = Field(..., description="Parent document ID")
     text: str = Field(..., description="Chunk text content")
-    embedding: List[float] = Field(..., description="Chunk embedding vector")
+    embedding: Optional[List[float]] = Field(default=None, description="Chunk embedding vector (auto-generated if not provided)")
     metadata: Optional[Dict[str, str]] = Field(default=None, description="Chunk metadata")
 
 
@@ -58,6 +57,12 @@ class SearchRequest(BaseModel):
     embedding: List[float] = Field(..., description="Query embedding vector")
     k: int = Field(default=10, ge=1, le=100, description="Number of results")
     filters: Optional[Dict[str, Any]] = Field(default=None, description="Search filters")
+    include_chunk: bool = Field(default=False, description="Include chunk data in results")
+
+
+class SearchTextRequest(BaseModel):
+    text: str = Field(..., description="Query text to search for")
+    k: int = Field(default=10, ge=1, le=100, description="Number of results")
     include_chunk: bool = Field(default=False, description="Include chunk data in results")
 
 
@@ -128,14 +133,7 @@ class CreateChunksResponse(BaseModel):
     chunk_ids: List[str]
 
 
-# TODO: add snapshot implementation
-class SnapshotMetadataResponse(BaseModel):
-    id: str
-    library_id: str
-    created_at: datetime
-    num_documents: int
-    num_chunks: int
-    index_type: str
+
 
 
 class VersionResponse(BaseModel):
