@@ -11,10 +11,20 @@ import numpy as np
 from typing import List
 from data_generator import generate_test_chunks, generate_embedding
 
-# Test configuration
-BASE_URL = os.getenv("BASE_URL", "http://localhost:8000/v1")
-TEST_MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://admin:password@localhost:27017/vector_db?authSource=admin")
-TEST_MONGODB_DB = os.getenv("MONGODB_DB", "vector_db")
+# Load environment variables from root .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv("../.env")
+except ImportError:
+    pass
+
+# Test configuration - Use test API on port 8001
+BASE_URL = os.getenv("TEST_BASE_URL", "http://localhost:8001/v1")
+# Use credentials from .env file, connect to test database
+user = os.getenv("MONGODB_USER", "admin")
+password = os.getenv("MONGODB_PASS", "password")
+TEST_MONGODB_URI = f"mongodb://{user}:{password}@localhost:27017/test?authSource=admin"
+TEST_MONGODB_DB = "test"
 
 def _url(path: str) -> str:
     return f"{BASE_URL}{path}"
@@ -54,7 +64,7 @@ class TestIVFE2E:
     @pytest.mark.asyncio
     async def test_ivf_basic_workflow(self, client):
         """Test basic IVF workflow: create library -> add data -> train -> search."""
-        # Create library with IVF index
+
         create_data = {
             "name": "IVF Test Library",
             "dims": 1024,
@@ -70,7 +80,6 @@ class TestIVFE2E:
         
         assert library_data["index_type"] == "ivf"
         
-                # Add some chunks to the library (these will be stored but not indexed yet)
         document_data = {"title": "Test Document", "metadata": {}}
         resp = await client.post(_url(f"/libraries/{library_id}/documents"), json=document_data)
         _assert_status(resp, 201, "create document")
@@ -79,7 +88,6 @@ class TestIVFE2E:
         # Generate training chunks with real embeddings
         training_chunks = generate_test_chunks(library_id, document_id, num_chunks=5)
         
-        # Add training chunks to the library
         for i, chunk in enumerate(training_chunks):
             chunk_data = {
                 "document_id": document_id,

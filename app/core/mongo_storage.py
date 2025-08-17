@@ -23,22 +23,50 @@ class MongoStorage:
         
     
     async def _create_indexes(self):
+        # Library indexes
         await self.libraries.create_index([("id", ASCENDING)], unique=True)
+        await self.libraries.create_index([("name", ASCENDING)], unique=True)  # Library names must be unique
         
+        # Document indexes
         await self.documents.create_index([("id", ASCENDING)], unique=True)
         await self.documents.create_index([("library_id", ASCENDING)])
+        await self.documents.create_index([("library_id", ASCENDING), ("title", ASCENDING)], unique=True)  # Document titles must be unique within a library
         
+        # Chunk indexes
         await self.chunks.create_index([("id", ASCENDING)], unique=True)
         await self.chunks.create_index([("library_id", ASCENDING)])
         await self.chunks.create_index([("document_id", ASCENDING)])
+        
+        # Also create indexes for test database
+        test_db = self.client["test"]
+        test_libraries = test_db.libraries
+        test_documents = test_db.documents
+        test_chunks = test_db.chunks
+        
+        # Test database indexes
+        await test_libraries.create_index([("id", ASCENDING)], unique=True)
+        await test_libraries.create_index([("name", ASCENDING)], unique=True)
+        
+        await test_documents.create_index([("id", ASCENDING)], unique=True)
+        await test_documents.create_index([("library_id", ASCENDING)])
+        await test_documents.create_index([("library_id", ASCENDING), ("title", ASCENDING)], unique=True)
+        
+        await test_chunks.create_index([("id", ASCENDING)], unique=True)
+        await test_chunks.create_index([("library_id", ASCENDING)])
+        await test_chunks.create_index([("document_id", ASCENDING)])
     
     # -------- libraries --------
     async def save_library(self, library: Library) -> None:
-        await self.libraries.replace_one(
-            {"id": library.id}, 
-            library.dict(), 
-            upsert=True
-        )
+        try:
+            await self.libraries.replace_one(
+                {"id": library.id}, 
+                library.dict(), 
+                upsert=True
+            )
+        except Exception as e:
+            if "duplicate key error" in str(e).lower() and "name" in str(e).lower():
+                raise ValueError(f"Library with name '{library.name}' already exists")
+            raise
     
     async def load_library(self, library_id: str) -> Optional[Library]:
         doc = await self.libraries.find_one({"id": library_id})
@@ -54,14 +82,19 @@ class MongoStorage:
         if not clean_updates:
             return await self.load_library(library_id)
         
-        result = await self.libraries.update_one(
-            {"id": library_id},
-            {"$set": clean_updates}
-        )
-        
-        if result.modified_count > 0:
-            return await self.load_library(library_id)
-        return None
+        try:
+            result = await self.libraries.update_one(
+                {"id": library_id},
+                {"$set": clean_updates}
+            )
+            
+            if result.modified_count > 0:
+                return await self.load_library(library_id)
+            return None
+        except Exception as e:
+            if "duplicate key error" in str(e).lower() and "name" in str(e).lower():
+                raise ValueError(f"Library with name '{updates.get('name')}' already exists")
+            raise
     
     async def load_all_libraries(self) -> Dict[str, Library]:
         cursor = self.libraries.find({})
@@ -76,11 +109,16 @@ class MongoStorage:
     
     # -------- documents --------
     async def save_document(self, document: Document) -> None:
-        await self.documents.replace_one(
-            {"id": document.id}, 
-            document.dict(), 
-            upsert=True
-        )
+        try:
+            await self.documents.replace_one(
+                {"id": document.id}, 
+                document.dict(), 
+                upsert=True
+            )
+        except Exception as e:
+            if "duplicate key error" in str(e).lower() and "title" in str(e).lower():
+                raise ValueError(f"Document with title '{document.title}' already exists in this library")
+            raise
     
     async def load_documents_for_library(self, library_id: str) -> List[Document]:
         cursor = self.documents.find({"library_id": library_id})
@@ -103,14 +141,19 @@ class MongoStorage:
         if not clean_updates:
             return await self.load_document(document_id)
         
-        result = await self.documents.update_one(
-            {"id": document_id},
-            {"$set": clean_updates}
-        )
-        
-        if result.modified_count > 0:
-            return await self.load_document(document_id)
-        return None
+        try:
+            result = await self.documents.update_one(
+                {"id": document_id},
+                {"$set": clean_updates}
+            )
+            
+            if result.modified_count > 0:
+                return await self.load_document(document_id)
+            return None
+        except Exception as e:
+            if "duplicate key error" in str(e).lower() and "title" in str(e).lower():
+                raise ValueError(f"Document with title '{updates.get('title')}' already exists in this library")
+            raise
     
     async def delete_document(self, document_id: str) -> bool:
         result = await self.documents.delete_one({"id": document_id})

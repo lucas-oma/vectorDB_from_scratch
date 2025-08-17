@@ -1,0 +1,555 @@
+{
+	"info": {
+		"_postman_id": "vector-db-testing-collection-lucas-oman",
+		"name": "VectorDB API Testing",
+		"description": "Complete collection for testing VectorDB API functionality including all index types (Flat, IVF, LSH SimHash)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/healthz",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"healthz"
+					]
+				}
+			}
+		},
+		{
+			"name": "Libraries",
+			"item": [
+				{
+					"name": "Create Flat Library",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Flat Index Test Library\",\n  \"dims\": 1024,\n  \"index_type\": \"flat\",\n  \"metadata\": {\n    \"description\": \"Test library for flat index\",\n    \"created_by\": \"postman\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/libraries/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Create IVF Library",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"IVF Index Test Library\",\n  \"dims\": 1024,\n  \"index_type\": \"ivf\",\n  \"metadata\": {\n    \"description\": \"Test library for IVF index\",\n    \"created_by\": \"postman\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/libraries/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Create LSH SimHash Library",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"LSH SimHash Test Library\",\n  \"dims\": 1024,\n  \"index_type\": \"lsh_simhash\",\n  \"metadata\": {\n    \"description\": \"Test library for LSH SimHash index\",\n    \"created_by\": \"postman\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/libraries/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Libraries",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/libraries/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Library by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Library",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Documents",
+			"item": [
+				{
+					"name": "Create Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Test Document\",\n  \"metadata\": {\n    \"author\": \"John Doe\",\n    \"category\": \"technical\",\n    \"created_date\": \"2024-01-15\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/documents",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"documents"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Documents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/documents",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"documents"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Document by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/documents/{{document_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"documents",
+								"{{document_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Document",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/documents/{{document_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"documents",
+								"{{document_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Chunks",
+			"item": [
+				{
+					"name": "Create Chunk (Auto-Embedding)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"document_id\": \"{{document_id}}\",\n  \"text\": \"This is a test chunk for vector database testing. It contains sample text that will be automatically embedded.\",\n  \"embedding\": null,\n  \"metadata\": {\n    \"chunk_type\": \"paragraph\",\n    \"word_count\": \"20\",\n    \"created_by\": \"postman\",\n    \"auto_embedded\": \"true\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/chunks",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"chunks"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Chunk with Mock Embedding (should fail!)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"document_id\": \"{{document_id}}\",\n  \"text\": \"This is a test chunk with mock embedding vector for testing.\",\n  \"embedding\": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],\n  \"metadata\": {\n    \"chunk_type\": \"paragraph\",\n    \"word_count\": \"15\",\n    \"has_embedding\": \"true\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/chunks",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"chunks"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Chunks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/chunks",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"chunks"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Chunk by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/chunks/{{chunk_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"chunks",
+								"{{chunk_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Chunk",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"text\": \"Updated chunk text with new content for testing.\",\n  \"metadata\": {\n    \"chunk_type\": \"paragraph\",\n    \"word_count\": \"12\",\n    \"updated_by\": \"postman\",\n    \"updated_at\": \"2024-01-15T10:30:00Z\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/chunks/{{chunk_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"chunks",
+								"{{chunk_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Chunk",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/chunks/{{chunk_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"chunks",
+								"{{chunk_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Embedding Generation",
+			"item": [
+				{
+					"name": "Generate Embedding",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"texts\": [\"This is sample text that will be converted to an embedding vector for testing purposes.\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/embed",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"embed"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Search Operations",
+			"item": [
+				{
+					"name": "Search with Text (Auto-Embedding)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"text\": \"vector database testing\",\n  \"k\": 5,\n  \"include_chunk\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/search_text",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"search_text"
+							]
+						}
+					}
+				},
+				{
+					"name": "Search with Sample Embedding (replace with an actual embedding",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"embedding\": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],\n  \"k\": 3\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/search",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"search"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Index Operations",
+			"item": [
+				{
+					"name": "Train IVF Index",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sample_vectors\": [\n    [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],\n    [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 0.1],\n    [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 0.1, 0.2]\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/libraries/{{library_id}}/index/train",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"libraries",
+								"{{library_id}}",
+								"index",
+								"train"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/v1",
+			"type": "string"
+		},
+		{
+			"key": "library_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "document_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "chunk_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+} 

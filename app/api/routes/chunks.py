@@ -1,64 +1,108 @@
 from __future__ import annotations
 from typing import List
+from app.api.routes.embed import embed_texts
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.deps import get_service
 from app.core.vector_db import VectorDBService
 from app.api.dto import (
     CreateChunkRequest, CreateChunksBatchRequest, UpdateChunkRequest,
-    ChunkResponse, CreateChunksResponse, DeleteChunksBatchRequest
+    ChunkResponse, CreateChunksResponse, DeleteChunksBatchRequest, EmbedRequest
 )
 
 router = APIRouter()
 
 @router.post("/{library_id}/chunks", response_model=ChunkResponse, status_code=status.HTTP_201_CREATED)
 async def create_chunk(library_id: str, body: CreateChunkRequest, svc: VectorDBService = Depends(get_service)):
+    """Create a new chunk with text and embedding vector (auto-generates embedding if not provided)."""
+    embedding = body.embedding
+    if embedding is None or embedding == []:
+        # Auto-generate embedding from text
+        try:
+            embed_req = EmbedRequest(texts=[body.text])
+            embed_response = await embed_texts(embed_req)
+            embedding = embed_response.embeddings[0]
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to generate embedding: {str(e)}")
+    
     try:
-        ch = await svc.create_chunk(library_id, body.document_id, body.text, body.embedding, body.metadata)
+        ch = await svc.create_chunk(library_id, body.document_id, body.text, embedding, body.metadata)
         return ChunkResponse(**ch.dict())
     except KeyError as e:  # "library" or "document"
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        if str(e) == "library":
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Library not found with the specified ID")
+        elif str(e) == "document":
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found with the specified ID")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Resource not found: {str(e)}")
     except ValueError as e:  # dim mismatch
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
+
+
 @router.post("/{library_id}/chunks/batch", response_model=CreateChunksResponse, status_code=status.HTTP_201_CREATED)
 async def create_chunks_batch(library_id: str, body: CreateChunksBatchRequest, svc: VectorDBService = Depends(get_service)):
+    """Create multiple chunks in a single request (auto-generates embeddings if not provided)."""
     ids: List[str] = []
     try:
         for item in body.chunks:
-            ch = await svc.create_chunk(library_id, item.document_id, item.text, item.embedding, item.metadata)
+            embedding = item.embedding
+            if embedding is None or embedding == []:
+                # Auto-generate embedding from text
+                try:
+                    embed_req = EmbedRequest(texts=[item.text])
+                    embed_response = await embed_texts(embed_req)
+                    embedding = embed_response.embeddings[0]
+                except Exception as e:
+                    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to generate embedding for chunk: {str(e)}")
+            
+            ch = await svc.create_chunk(library_id, item.document_id, item.text, embedding, item.metadata)
             ids.append(ch.id)
         return CreateChunksResponse(chunk_ids=ids)
     except KeyError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        if str(e) == "library":
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Library not found with the specified ID")
+        elif str(e) == "document":
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found with the specified ID")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Resource not found: {str(e)}")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
+
+
 @router.get("/{library_id}/chunks", response_model=List[ChunkResponse])
 async def list_chunks(library_id: str, svc: VectorDBService = Depends(get_service)):
+    """List all chunks within a library."""
     try:
         items = await svc.list_chunks(library_id)  # simple wrapper over storage.load_chunks_for_library
     except KeyError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="library")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Library not found with the specified ID")
     return [ChunkResponse(**c.dict()) for c in items]
+
+
 
 @router.get("/{library_id}/chunks/{chunk_id}", response_model=ChunkResponse)
 async def get_chunk(library_id: str, chunk_id: str, svc: VectorDBService = Depends(get_service)):
+    """Get details of a specific chunk by ID."""
     lib = await svc.get_library(library_id)
     if not lib:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="library")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Library not found with the specified ID")
     ch = await svc.get_chunk(chunk_id)
     if not ch or ch.library_id != library_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="chunk")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chunk not found with the specified ID")
     return ChunkResponse(**ch.dict())
+
+
 
 @router.patch("/{library_id}/chunks/{chunk_id}", response_model=ChunkResponse)
 async def update_chunk(library_id: str, chunk_id: str, body: UpdateChunkRequest, svc: VectorDBService = Depends(get_service)):
+    """Update chunk text, embedding, or metadata."""
     try:
         # First verify the chunk exists
         ch = await svc.get_chunk(chunk_id)
         if not ch or ch.library_id != library_id:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="chunk")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chunk not found with the specified ID")
         
         updates = {}
         if body.text is not None: updates["text"] = body.text
@@ -76,20 +120,26 @@ async def update_chunk(library_id: str, chunk_id: str, body: UpdateChunkRequest,
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
+
+
 @router.delete("/{library_id}/chunks/{chunk_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_chunk(library_id: str, chunk_id: str, svc: VectorDBService = Depends(get_service)):
+    """Delete a specific chunk by ID."""
     ok = await svc.delete_chunk(library_id, chunk_id)
     if not ok:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="chunk")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chunk not found with the specified ID")
     return None
+
+
 
 @router.delete("/{library_id}/chunks", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_chunks_batch(library_id: str, body: DeleteChunksBatchRequest, svc: VectorDBService = Depends(get_service)):
+    """Delete multiple chunks by their IDs."""
     # validate all exist first for simple atomic semantics
     for cid in body.chunk_ids:
         ch = await svc.get_chunk(cid)
         if not ch or ch.library_id != library_id:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"chunk '{cid}'")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Chunk not found with ID '{cid}'")
     for cid in body.chunk_ids:
         await svc.delete_chunk(library_id, cid)
     return None

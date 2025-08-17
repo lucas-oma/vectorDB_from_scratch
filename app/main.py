@@ -22,6 +22,12 @@ ROOT_PATH = os.getenv("ROOT_PATH", "")
 MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
 MONGODB_DB = os.getenv("MONGODB_DB", "vector_db")
 
+# Check if we're in test mode
+TEST_MODE = os.getenv("TEST_MODE", "false").lower() == "true"
+if TEST_MODE:
+    MONGODB_DB = "test"
+    print(f"🧪 TEST MODE: Using database '{MONGODB_DB}'")
+
 log = logging.getLogger("uvicorn.error")
 
 

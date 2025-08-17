@@ -14,15 +14,16 @@ EMBED_MAX_TEXTS = int(os.getenv("EMBED_MAX_TEXTS", "128"))
 
 @router.post("/embed", response_model=EmbedResponse, status_code=status.HTTP_200_OK)
 async def embed_texts(req: EmbedRequest) -> EmbedResponse:
+    """Generate embedding vectors from text using the Cohere API."""
     api_key = os.getenv("COHERE_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="COHERE_API_KEY not configured")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Cohere API key not configured. Please set COHERE_API_KEY environment variable.")
 
     texts = req.texts or []
     if not texts:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="`texts` must be a non-empty list")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Texts list cannot be empty. Please provide at least one text to embed.")
     if len(texts) > EMBED_MAX_TEXTS:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Too many texts: {len(texts)} > {EMBED_MAX_TEXTS}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Too many texts provided: {len(texts)} > {EMBED_MAX_TEXTS}. Please reduce the number of texts to embed.")
 
     payload = {
         "texts": texts,
@@ -43,15 +44,15 @@ async def embed_texts(req: EmbedRequest) -> EmbedResponse:
                 err = {"message": resp.text}
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"provider_status": resp.status_code, "error": err})
         if resp.status_code >= 500:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Embedding provider error {resp.status_code}")
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Embedding provider (Cohere) server error: {resp.status_code}")
 
         data = resp.json()
         embeddings = data.get("embeddings")
         if embeddings is None:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Provider response missing 'embeddings'")
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Embedding provider (Cohere) response is missing 'embeddings' field")
         return EmbedResponse(embeddings=embeddings)
-
     except httpx.TimeoutException:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Embedding provider timed out")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Embedding provider (Cohere) request timed out. Please try again.")
     except httpx.RequestError as e:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Embedding provider request failed: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Embedding provider (Cohere) request failed: {str(e)}")
+

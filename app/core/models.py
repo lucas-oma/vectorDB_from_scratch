@@ -43,7 +43,7 @@ Search-related models
 class SearchResult(BaseModel):
     chunk_id: str = Field(..., description="ID of the matching chunk")
     similarity_score: float = Field(..., description="Similarity score (can be negative for distances)")
-    chunk: Optional[Chunk] = Field(None, description="The matching chunk object (if available)")
+    chunk: Optional[Chunk] = Field(None, description="Full chunk data (optional)")
 
 class SearchQuery(BaseModel):
     embedding: List[float] = Field(..., min_items=1, description="Query embedding vector")

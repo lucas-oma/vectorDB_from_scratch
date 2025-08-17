@@ -8,10 +8,13 @@ from app.core.similarity_metrics import CosineSimilarity
 class IVFIndex(VectorIndex):
     """
     IVF (Inverted File) index (FAISS-style)
-      - centroids: (n_clusters, dim) or None before training
-      - inverted_lists: cluster_id -> set[chunk_id]  (O(1) add/remove)
-      - chunk_vectors: chunk_id -> unit-norm np.ndarray  (single source of truth)
-      - chunk_to_cluster: chunk_id -> cluster_id for O(1) reassign/removal
+
+    Parameters:
+      - dimension: dimension of the vectors
+      - n_clusters: number of clusters
+      - n_probes: number of clusters to probe per query
+      - train_iters: number of k-means iterations
+      - rng_seed: random seed for reproducible initialization
       
     FAISS-style: Must be trained before any add/update/search operations.
     """
@@ -116,7 +119,7 @@ class IVFIndex(VectorIndex):
         top_idx = np.argpartition(-scores, kth=k_eff-1)[:k_eff]
         top_sorted = top_idx[np.argsort(-scores[top_idx])]
 
-        return [SearchResult(chunk_id=cand_ids[i], similarity_score=float(scores[i]), chunk=None)
+        return [SearchResult(chunk_id=cand_ids[i], similarity_score=float(scores[i]))
                 for i in top_sorted]
 
     # TODO: double check complexities
