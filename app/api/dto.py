@@ -77,8 +77,8 @@ class LibraryResponse(BaseModel):
     dims: int
     index_type: str
     metadata: Optional[Dict[str, str]] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    # created_at: Optional[datetime] = None
+    # updated_at: Optional[datetime] = None
 
 
 class DocumentResponse(BaseModel):
@@ -86,8 +86,8 @@ class DocumentResponse(BaseModel):
     library_id: str
     title: str
     metadata: Optional[Dict[str, str]] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    # created_at: Optional[datetime] = None
+    # updated_at: Optional[datetime] = None
 
 
 class ChunkResponse(BaseModel):
@@ -97,8 +97,8 @@ class ChunkResponse(BaseModel):
     text: str
     embedding: List[float]
     metadata: Optional[Dict[str, str]] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    # created_at: Optional[datetime] = None
+    # updated_at: Optional[datetime] = None
 
 
 class LibraryStatsResponse(BaseModel):
@@ -128,6 +128,7 @@ class CreateChunksResponse(BaseModel):
     chunk_ids: List[str]
 
 
+# TODO: add snapshot implementation
 class SnapshotMetadataResponse(BaseModel):
     id: str
     library_id: str
