@@ -1,6 +1,6 @@
 # VectorDB from Scratch
 
-![VectorDB Logo](assets/logo.png)
+<img src="assets/logo.png" alt="VectorDB Logo" height="150" height="auto">
 
 A from-scratch Vector Database implementation with REST API, featuring multiple indexing algorithms and MongoDB persistence.
 
