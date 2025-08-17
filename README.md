@@ -66,8 +66,13 @@ Client Layer → API Layer (FastAPI) → Service Layer → Storage Layer → Ind
    - Swagger UI: http://localhost:8000/docs
    - ReDoc: http://localhost:8000/redoc
 
+6. **Test with Postman Collection**
+   - Import `postman/VectorDB_Postman_Collection.json` into Postman
+   - The `base_url` variable is set to `http://localhost:8000/v1` (will write in production, change to :8001 if  you want to write in test db)
+   - The collection includes examples for all index types (Flat, IVF, LSH SimHash)
 
-## API Documentation
+
+## 📚 API Documentation
 
 ### Core Endpoints
 
@@ -96,6 +101,7 @@ Client Layer → API Layer (FastAPI) → Service Layer → Storage Layer → Ind
 
 #### Search & Operations
 - `POST /v1/libraries/{library_id}/search` - Vector similarity search
+- `POST /v1/libraries/{library_id}/search_text` - Text-based similarity search (auto-generates embedding)
 - `POST /v1/libraries/{library_id}/index/train` - Train IVF index
 - `POST /v1/libraries/{library_id}/index/rebuild` - Rebuild index
 - `GET /v1/libraries/{library_id}/stats` - Get library statistics
@@ -125,7 +131,26 @@ curl -X POST "http://localhost:8000/v1/libraries/{library_id}/documents" \
   }'
 ```
 
-#### Creating a Chunk with Embedding
+#### Creating a Chunk with pre-computed Embedding
+
+The `text` parameter stores the original text content for reference and retrieval purposes
+
+```bash
+curl -X POST "http://localhost:8000/v1/libraries/{library_id}/chunks" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "document_id": "{document_id}",
+    "text": "This is sample text for vector embedding.",
+    "embedding": [0.1, 0.2, 0.3, ...],
+    "metadata": {"chunk_type": "paragraph"}
+  }'
+```
+
+#### Creating a Chunk with auto-generated embedding
+
+If the `embedding` field is NOT provided, embedding will be auto-generated from the `text` parameter. Then, the `text` parameter is stored for reference and retrieval purposes, as usual.
+
+
 ```bash
 curl -X POST "http://localhost:8000/v1/libraries/{library_id}/chunks" \
   -H "Content-Type: application/json" \
@@ -147,7 +172,18 @@ curl -X POST "http://localhost:8000/v1/libraries/{library_id}/search" \
   }'
 ```
 
-## Indexing Algorithms (and performance)
+#### Text-based Search
+```bash
+curl -X POST "http://localhost:8000/v1/libraries/{library_id}/search_text" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "vector database testing",
+    "k": 5,
+    "include_chunk": true
+  }'
+```
+
+## 🧠 Indexing Algorithms (and performance)
 
 ### 1. Flat Index
 - **Type**: Exact search
@@ -178,7 +214,7 @@ curl -X POST "http://localhost:8000/v1/libraries/{library_id}/search" \
 | Large (> 100K) | Medium | Approximate | IVF |
 | Any | High (> 1000) | Approximate | LSH SimHash |
 
-## Testing
+## 🧪 Testing
 
 The project includes a test suite with **isolated test environments** to ensure tests don't interfere with production data. The test setup uses a dedicated test API service that runs on port 8001 with `TEST_MODE=true`, ensuring all test data goes to the `test` database.
 
@@ -235,9 +271,17 @@ python -m pytest test_lsh_simhash_e2e.py::TestLSHSimHashE2E::test_lsh_simhash_pe
 ``` -->
 
 
-## Technical Design Choices
+## ⚙️ Technical Design Choices
 
-### 1. Thread Safety with AsyncRWLock
+### 1. Layered Architecture
+**Choice**: Clean separation between API, Vector DB Service, Storage, and Index layers.
+
+**Reason**:
+- Easy to test and maintain
+- Easy to  switch storage backends and/or implement more sophisticated sotrage orchestrators
+- Easy to create new index types
+
+### 2. Thread Safety with AsyncRWLock
 **Choice**: Implemented custom AsyncRWLock for concurrent access control.
 
 **Reason**:
@@ -246,29 +290,22 @@ python -m pytest test_lsh_simhash_e2e.py::TestLSHSimHashE2E::test_lsh_simhash_pe
 - Ensures exclusive access for writers to avoid starvation
 - Critical for production environments
 
-### 2. MongoDB Persistence
+### 3. MongoDB Persistence
 **Choice**: Used MongoDB for data persistence.
 
 **Reason**:
 - Flexible schema for metadata storage
 - Good performance for document-based data
 - Ensures data survival across restarts, and can recreate indexes from it
+- Indexes are also automatically rebuilt from persistent data when the service starts up
 
-### 3. (pseudo) Layered Architecture
-**Choice**: Clean separation between API, Vector DB Service, Storage, and Index layers.
-
-**Reason**:
-- Easy to test and maintain
-- Easy to  switch storage backends and/or implement more sophisticated sotrage orchestrators
-- Easy to create new index types
-
-### 5. Pydantic Models
+### 4. Pydantic Models
 **Choice**: Used Pydantic for data validation and serialization.
 
 **Reason**:
 - Automatic API documentation generation
 - Runtime type checking and validation
-- Clean, semi-typed declarative schema definition
+- Clean, (semi) typed declarative schema definition
 
 ### Environment Variables
 
@@ -288,9 +325,6 @@ MONGODB_PASS=password
 COHERE_API_KEY=your_cohere_api_key_here
 COHERE_EMBED_URL=https://api.cohere.ai/v1/embed
 COHERE_MODEL=embed-english-v3.0
-
-# Storage Configuration
-DATA_DIR=./db
 ```
 
 #### Testing specific
