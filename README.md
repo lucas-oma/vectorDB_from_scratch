@@ -290,11 +290,6 @@ python -m pytest test_persistence.py -v
 - **Test Mode**: API runs with `TEST_MODE=true` environment variable
 - **Automatic Cleanup**: Test data is automatically cleaned after each test
 
-<!-- #### Performance Tests
-```bash
-# Run performance comparison
-python -m pytest test_lsh_simhash_e2e.py::TestLSHSimHashE2E::test_lsh_simhash_performance_comparison -v -s
-``` -->
 
 
 ## ⚙️ Technical Design Choices
